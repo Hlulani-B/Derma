@@ -1,0 +1,41 @@
+
+
+
+@media (orientation: landscape) {
+    .webcam{
+height:60vh;
+
+
+}
+
+.wrapper3{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+     background-color: #7CC2A8 ;
+     height: 100vh;
+     gap: 2vh;
+
+     h1{
+        font-size: 3vw;
+     }
+     img{
+        width:50vw;
+        height:60vh;
+     }
+}
+.sec{
+    display: flex;
+gap:1vw;
+}
+
+.circle{
+    height: 7vh;
+    width:5vw;
+    font-size: 2vw;
+
+}
+i{
+    font-size:large;
+}
+}

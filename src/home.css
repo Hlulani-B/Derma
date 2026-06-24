@@ -1,0 +1,281 @@
+a{
+    text-decoration: none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+h1,p,h2{
+    color:#F5EFE0;
+    font-family: 'Playfair Display', serif;
+
+}
+
+button{
+        color: #F5EFE0;
+        border: none;
+
+}
+
+
+input{
+    button{
+background-color: #1B6E4F;
+box-shadow:2px 2px 2px rgb(15, 15, 15);
+    }
+    
+}
+@media (orientation: landscape) {
+  .part1{
+    display: flex;
+    flex-direction: column;
+     
+    height:80vh;
+    align-items: center;
+    
+    background-color: #1B6E4F ;
+    background-image: linear-gradient(rgba(27, 110, 79, 0.6), rgba(27, 110, 79, 0.6)),url('https://images.unsplash.com/photo-1612817288484-6f916006741a?w=1600');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity:0.5;
+
+  }
+  button{
+    color:rgb(69, 66, 66);
+    background-color:#F5EFE0;
+    width:15vw;
+    height:6vh;
+    border-radius:2vw;
+    box-shadow:2px 2px 2px rgb(15, 15, 15);
+  }
+  h1{
+    font-size: 7vw;
+  }
+   h2{
+    font-size: 4vw;
+  }
+ 
+  p{
+    font-size: 1.6vw;
+     max-width:25vw;
+     text-align:center;
+    
+  }
+
+  .part2{
+    background-color: #7CC2A8 ;
+     display: flex;
+    flex-direction: column;
+     justify-content: center;
+    height:100vh;
+    align-items: center;
+     p{
+    font-size: 1.6vw;
+     max-width:40vw;
+     text-align:center;
+    
+  }
+  button{
+    background-color: #1B6E4F ;
+     transform: translate(-7%,20%);
+     color: white;
+  }
+  .beyonce button{
+    background-color: #1B6E4F ;
+    transform: translate(10%,-10%);
+
+  }
+  }
+  input[type="file"] {
+  font-size: 14px;
+  color: #333;
+   transform: translate(0%,0%);
+    
+}
+
+/* Chrome/Safari/Edge only - styles the actual button part */
+input[type="file"]::file-selector-button {
+  background-color: #1B6E4F;
+  color: white;
+  width:15vw;
+    height:6vh;
+    border-radius:2vw;
+   
+}
+
+.imagee{
+    display:flex;
+    align-items: center;
+    flex-direction:column;
+     background-color: #7CC2A8 ;
+     height:100vh;
+     margin: 0;
+     width: 98vw;
+     padding:0;
+}
+.result{
+     background-color: #627d73 ;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap:3vh;
+    
+}
+.object{
+    
+    h1{
+       font-size:2vw; 
+    };
+    display:flex;
+    flex-direction: column;
+    background-color: rgb(97, 88, 77);
+    align-items: center;
+    width:60vw;
+    border-radius: 3vw;
+    box-shadow: 3px 3px 3px;
+     outline:3px solid white;
+    
+}
+}
+
+
+
+
+a {
+  text-decoration: none;
+}
+
+h1, p, h2 {
+  color: #F5EFE0;
+  font-family: 'Playfair Display', serif;
+}
+
+
+
+
+@media (orientation: portrait) {
+  .part1 {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    align-items: center;
+    justify-content: center;
+    background-color: #1d5f47;
+    background-image: linear-gradient(
+        rgba(24, 71, 53, 0.6),
+        rgba(36, 80, 64, 0.6)
+      ),
+      url('https://images.unsplash.com/photo-1612817288484-6f916006741a?w=1600');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.5;
+    gap:3vh;
+  }
+
+  button {
+    color: gray;
+    background-color: #F5EFE0;
+    width: 40vw;
+    height: 6vh;
+    border-radius: 5vw;
+    box-shadow: 2px 2px 2px rgb(15, 15, 15);
+  }
+
+  h1 {
+    font-size: 14vw;
+  }
+
+  h2 {
+    font-size: 8vw;
+  }
+
+  p {
+    font-size: 3.5vw;
+    max-width: 70vw;
+    text-align: center;
+  }
+
+  .part2 {
+   /* background-color: #7CC2A8;*/
+   background-color: #7e8585;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+    align-items: center;
+  }
+
+  .part2 p {
+    font-size: 3.5vw;
+    max-width: 80vw;
+    text-align: center;
+  }
+
+  .part2 button {
+    background-color: #1B6E4F;
+    transform: translate(-7%, 20%);
+    color: white;
+  }
+
+  .beyonce button {
+    background-color: #1B6E4F;
+    transform: translate(10%, -10%);
+  }
+
+  input[type="file"] {
+    font-size: 14px;
+    color: #333;
+    transform: translate(0%, 0%);
+  }
+
+  input[type="file"]::file-selector-button {
+    background-color: #1B6E4F;
+    color: white;
+    width: 40vw;
+    height: 6vh;
+    border-radius: 5vw;
+  }
+
+  .imagee {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    background-color: #7CC2A8;
+    height: 100vh;
+    margin: 0;
+    width: 98vw;
+    padding: 0;
+  }
+
+  .result {
+    background-color: #627d73;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3vh;
+  }
+
+  .object {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(97, 88, 77);
+    align-items: center;
+    width: 85vw;
+    border-radius: 6vw;
+    box-shadow: 3px 3px 3px;
+    outline: 3px solid white;
+  }
+
+  .object h1 {
+    font-size: 4.5vw;
+  }
+}
