@@ -9,14 +9,35 @@ const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(cors());
 app.post("/derma", async (req, res) => {  // changed GET to POST
-    console.log("heyy",process.env.G_KEY);
+    
     const genAI = new GoogleGenerativeAI(process.env.G_KEY);
     
     
     const { image } = req.body;
 
     
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-lite" });
+    const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash-lite", 
+   generationConfig: {
+    responseMimeType: "application/json",
+    responseSchema: {
+        type: "ARRAY", 
+        items: {
+            type: "OBJECT", 
+            properties: {
+                condition: { type: "STRING" },
+                risk: { type: "STRING" },
+                formulations: { 
+                    type: "ARRAY", 
+                    items: { type: "STRING" } 
+                },
+                message: { type: "STRING" }
+            },
+            required: ["condition", "risk", "formulations", "message"]
+        }
+    }
+}
+});
 
     try {
         const result = await model.generateContent([
@@ -27,13 +48,23 @@ app.post("/derma", async (req, res) => {  // changed GET to POST
                 }
             },
             {
-                text: `You are not making a medical diagnoses, you are just classifying the skin and a recommendation. this is mostly forminor skin conditions, just so one can go and buy a a skin care product that you can easilt get of the shelf.You are a skincare advisor, not a medical professional. Analyse this person's skin for cosmetic skincare purposes only. Identify skin type and cosmetic concerns like oiliness, dryness, acne, dark spots, or uneven texture. You must ALWAYS respond with valid JSON only, no text outside the JSON.
+               text: `Analyse this image for cosmetic skincare purposes only. Identify skin characteristics, concerns (oiliness, dark spots, uneven texture), or visible lumps. 
 
-Return an array of objects: [{"condition": "", "risk": "low/medium/high", "formulations": "", "message": ""}]
+CRITICAL SAFETY RULE: If the image depicts a complex medical condition, a structural lump, an unknown growth, or anything that requires an absolute medical evaluation, set the risk to "high" and use the message field to instruct them to see a dermatologist. 
 
-risk levels mean: low=no action needed, medium=monitor it, high=see a dermatologist.
-the formulations field must be an array of the skincare products or formulation. if you see something that is not skin or face just return empty string array. return only the things i tell you to return you qare breaking my code.
-If the image is not a face or skin return: []. Note: you are not diagnosing. If the skin condition is deadly just put risk:high then in message: explain and include go and consult a doctor. must be in that json format. If the image is of something other than skincare just give empty array. I repeat empty array. never return only paragraphs or excuses.  remember that this is not a diagnosis, you are just identifying and giving suggestions. if risk is high or low, must include consult a doctor.`
+You must ALWAYS respond with a valid JSON array of objects following this exact structure, even if you are refusing to analyse or recommending a doctor. No conversational text outside of the JSON.
+
+Expected Output Format:
+[
+  {
+    "condition": "Name of cosmetic concern or visible feature",
+    "risk": "low" | "medium" | "high",
+    "formulations": ["Product type or active ingredient choice"],
+    "message": "Advice, explanation, or medical disclaimer if risk is high"
+  }
+]
+
+If the image is not of skin, hair, or a scalp at all, return an empty array: []`
             }
         ]);
 
@@ -58,41 +89,111 @@ app.listen(3000, () => console.log("Server running on port 3000"));
 
 import * as cheerio from 'cheerio'
 
+async function getProduct(formulations) {
+    const result = [];
 
-async function getProduct(formulations){
-    //['salicylic acid', 'retinoids']
-   
-   
-try{
-    for(const product of formulations){
-        
-        let encoded=encodeURIComponent(product);
-        let  url=`https://www.caretobeauty.com/za/catalogsearch/result/?q=${encoded}`;
-        let res=await fetch(url);
-        let html=await res.text();
+    try {
+        for (const product of formulations) {
+           
+            let encoded = encodeURIComponent(product);
+            let url = `https://www.caretobeauty.com/za/catalogsearch/result/?q=${encoded}`;
+            let res = await fetch(url, {
+    method: "GET",
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5'
+    }
+});
+            let html = await res.text();
 
-        let loadHtml= cheerio.load(html);
-        let script_content='';
-            loadHtml('script').each((i,el)=>{
-                let text=loadHtml(el).html;
-                if(text && text.includes('window.category_data')){
-                    script_content=text;
+            let loadHtml = cheerio.load(html);
+
+            loadHtml('script').each((i, el) => {
+                let script_content = loadHtml(el).html();
+                if (script_content && script_content.includes('window.category_data')) {
+                    let match = script_content.match(/window\.category_data\s*=\s*(\{[\s\S]*?\});/);
+                    //console.log(match);
+                   // console.log(result);
+                    if (match && match[1]) {
+                       try {
+                            // Try parsing the raw string first without breaking escaped quotes
+                            const parsedData = JSON.parse(match[1]);
+                            result.push(parsedData);
+                        } catch (parseError) {
+                            console.error(` JSON Parse failed for ${product}. Trying fallback cleanup...`);
+                            
+                            try {
+                                // Fallback: Clean up trailing commas or backslashes if absolutely necessary
+                                let cleanedJson = match[1]
+                                    .replace(/\\"/g, '"') // fix escaped quotes properly instead of dropping all slashes
+                                    .replace(/,(\s*[\]}])/g, '$1'); // remove trailing commas
+                                
+                                result.push(JSON.parse(cleanedJson));
+                            } catch (fallbackError) {
+                                console.error(`❌ Fallback also failed:`, fallbackError.message);
+                            }
+                        }
+                    }else{
+                       
+                console.log(`Warning: 'window.category_data' not found for product: ${match}`);
+            
+                    }
+                }
+            });
+
+           
+        }
+console.log("Scraping completed successfully!");
+//console.log("Hlulani",result);
+        return { success: true, result };
+
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+
+
+
+
+
+async function  getImages(formulations){
+    try{
+    const products=await getProduct(formulations);
+    const product=products.result || [];
+    
+   const result=[];
+   for(let p of product){
+    let arr=p.collection?.products;
+    console.log(arr);
+    for(let a of arr){
+        if(result.length==12){
+            break;
+        }
+       if (a.image) {
+                    let img=a.image.replace(/\\/g, '');
+                    if(!result.includes(img)){
+                    result.push(img);
+       }
                 }
 
-            });
-            console.log(script_content);
-            return{success:true, result:script_content};
-        
-
     }
-}catch(e){
-    return {success:false,error:error.message};
-}
+   }
+   console.log("Backend Successfully Compiled Images:", result);
+    return {success:true,result:result};
+    }catch(error){
+  return {success:false,error:error.message};
+    }
+
+    
+
 }
 
-app.get("/getProducts",async(req,res)=>{
+app.post("/getProducts",async(req,res)=>{
    const {formulations}=req.body;
-   const result= await getProduct(formulations);
+   const result= await getImages(formulations);
+   console.log("hehe",result);
    res.json(result);
 
 
