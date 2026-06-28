@@ -40,31 +40,19 @@ let vid={
 
         />
         <section className="sec">
-             
             <button className="circle" onClick={fmode}><IoMdReverseCamera /></button>
             <button className="circle" onClick={capture}><CiCamera /></button>
-            <button className="circle" onClick={()=>{
-            navigate(0);
-           }}><IoArrowBackSharp /></button>
-            </section>
-       
+            <button className="circle" onClick={()=>{ navigate(0); }}><IoArrowBackSharp /></button>
+        </section>
        </>}
 
        {image && <>
        <img src={image} alt="picture"/>
-       <section>
-       <button onClick={()=>{
-        setimage(null);
-        
-       }}>Retake</button>
-       <button onClick={()=>{
-        onCapture(image);
-        
-       }}>Done</button>
-       <button onClick={()=>{
-            navigate(0);
-           }}><IoArrowBackSharp /></button>
-</section>
+       <section className="preview-btns">
+       <button className="retake-btn" onClick={()=>{ setimage(null); }}>Retake</button>
+       <button className="done-btn" onClick={()=>{ onCapture(image); }}>Done</button>
+       <button className="back-btn" onClick={()=>{ navigate(0); }}><IoArrowBackSharp /></button>
+       </section>
        </>}
            
     </section>);
