@@ -1,61 +1,48 @@
-# DermAI - AI-Powered Skin Analysis & Product Recommender
+# Derma, AI Powered Skin Analysis and Product Recommender
 
-DermAI analyses your skin in real time using your webcam and recommends the best skincare formulations tailored specifically to you.
+Demo video: https://youtu.be/nNA5UwIJfLU
 
----
+Derma looks at your skin in real time through your webcam and recommends skincare formulations tailored specifically to you.
 
 ## Features
 
-- **Live Webcam Capture** - Take a photo directly from your browser, no upload needed
-- **AI Skin Analysis** - Uses Google Gemini 2.5 Flash Lite to analyse your skin and identify your skin type, concerns, and recommended ingredients
-- **Formulation Recommendations** - Get personalised skincare formulations based on your analysis
-- **Product Search** - Searches for real products matching your recommended formulation
-- **Product Images** - Extracts and displays product images using Cheerio
+You can take a photo straight from your browser using your webcam, no need to upload anything. The photo gets analysed by Google Gemini 2.5 Flash Lite, which works out your skin type, your main concerns, and which ingredients would actually help. From there it generates personalised skincare formulation recommendations based on that analysis. It then searches for real products that match those recommendations, and pulls in product images using Cheerio so you're not just looking at a list of text.
 
----
+## Tech stack
 
-## Tech Stack
+The AI and vision work is handled by Google Gemini 2.5 Flash Lite. HTML parsing runs through Cheerio. The webcam capture uses the browser's WebRTC API, and the backend is built on Node.js.
 
-| Layer | Technology |
-|---|---|
-| AI / Vision | Google Gemini 2.5 Flash Lite |
-| HTML Parsing | Cheerio |
-| Webcam | Browser WebRTC API |
-| Backend | Node.js |
+## Getting started
 
----
+You'll need Node.js v18 or higher, and a Google Gemini API key.
 
-## Getting Started
-
-### Prerequisites
-- Node.js v18+
-- A Google Gemini API key
-
-### Installation
+Clone the repo:
 
 ```bash
-# Clone the repo
-git clone https://github.com/yourusername/dermai.git
-cd dermai
+git clone https://github.com/yourusername/derma.git
+cd derma
+```
 
-# Install dependencies
+Install dependencies:
+
+```bash
 npm install
+```
 
-# Add your Gemini API key
+Add your Gemini API key:
+
+```bash
 echo "GEMINI_API_KEY=your_key_here" > .env
+```
 
-# Start the app
+Start the app:
+
+```bash
 npm start
 ```
 
 Then open `http://localhost:3000` in your browser.
 
----
+## How it works
 
-## How It Works
-
-1. **Capture** - You allow webcam access and take a photo of your face
-2. **Analyse** - The image is sent to Gemini 2.5 Flash Lite which identifies your skin type and concerns
-3. **Recommend** - Gemini returns a list of recommended skincare formulations and ingredients
-4. **Parse** - Cheerio parses the HTML of a skincare product website to extract matching products and images
-5. **Display** - The matched products and images are shown alongside your personalised recommendations
+First you allow webcam access and take a photo of your face. That image gets sent to Gemini 2.5 Flash Lite, which identifies your skin type and concerns. Gemini then returns a list of recommended formulations and ingredients based on what it found. Cheerio parses the HTML of a skincare product website to find matching products and pull their images. Finally, those matched products and images are displayed alongside your personalised recommendations.
