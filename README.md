@@ -46,3 +46,13 @@ Then open `http://localhost:3000` in your browser.
 ## How it works
 
 First you allow webcam access and take a photo of your face. That image gets sent to Gemini 2.5 Flash Lite, which identifies your skin type and concerns. Gemini then returns a list of recommended formulations and ingredients based on what it found. Cheerio parses the HTML of a skincare product website to find matching products and pull their images. Finally, those matched products and images are displayed alongside your personalised recommendations.
+
+## Known issues
+
+### Care to Beauty scraper
+
+The product search scrapes Care to Beauty (`caretobeauty.com`) for real product images. There were two problems with the original implementation:
+
+1. **Broken regex** — The original code used a non-greedy regex (`/window\.category_data\s*=\s*(\{[\s\S]*?\});/`) to extract the product JSON from the page. Because the JSON is deeply nested, the regex stopped at the first `};` inside the object and never captured the full data. Fixed by replacing the regex with a brace-depth counter that walks the string and finds the actual closing brace of the JSON object.
+
+2. **Cloudflare blocking on cloud servers** — The site uses Cloudflare CDN which blocks requests from datacenter/cloud IPs. This means the scraper works locally (from your home IP) but may fail when deployed to services like Render. If you hit this, you'll need to route requests through a scraping proxy (e.g. ScrapingBee, ScraperAPI) to get around the IP blocking.
