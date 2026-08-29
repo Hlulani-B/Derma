@@ -114,20 +114,55 @@ app.post("/derma", async (req, res) => {
 app.listen(3000, () => console.log("Server running on port 3000"));
 
 
+import * as cheerio from 'cheerio'
+
+// Extract JSON from "window.category_data = {...}" by counting brace depth
+function extractCategoryData(html) {
+    const start = html.indexOf('window.category_data');
+    if (start === -1) return null;
+    const jsonStart = html.indexOf('{', start);
+    if (jsonStart === -1) return null;
+    let depth = 0;
+    for (let i = jsonStart; i < html.length; i++) {
+        if (html[i] === '{') depth++;
+        if (html[i] === '}') {
+            depth--;
+            if (depth === 0) {
+                try {
+                    return JSON.parse(html.substring(jsonStart, i + 1));
+                } catch (e) {
+                    return null;
+                }
+            }
+        }
+    }
+    return null;
+}
+
 async function getProduct(formulations) {
     const result = [];
 
     try {
         for (const product of formulations) {
             const encoded = encodeURIComponent(product);
-            const url = `https://makeup-api.herokuapp.com/api/v1/products.json?product_name=${encoded}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.length > 0) {
-                result.push({ search: product, items: data });
+            const url = `https://www.caretobeauty.com/za/catalogsearch/result/?q=${encoded}`;
+            const res = await fetch(url, {
+                method: "GET",
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5'
+                }
+            });
+            const html = await res.text();
+            const data = extractCategoryData(html);
+            if (data) {
+                result.push(data);
+            } else {
+                console.log(`Warning: could not extract category_data for: ${product}`);
             }
         }
-        console.log("Makeup API fetch completed successfully!");
+        console.log("Scraping completed successfully!");
         return { success: true, result };
     } catch (error) {
         return { success: false, error: error.message };
@@ -145,11 +180,15 @@ async function getImages(formulations) {
         const data = products.result || [];
 
         const result = [];
-        for (const group of data) {
-            for (const item of (group.items || [])) {
+        for (const p of data) {
+            const items = p.collection?.products || [];
+            for (const item of items) {
                 if (result.length >= 12) break;
-                if (item.image_link && !result.includes(item.image_link)) {
-                    result.push(item.image_link);
+                if (item.image) {
+                    const img = item.image.replace(/\\/g, '');
+                    if (!result.includes(img)) {
+                        result.push(img);
+                    }
                 }
             }
         }
