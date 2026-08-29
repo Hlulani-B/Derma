@@ -114,67 +114,21 @@ app.post("/derma", async (req, res) => {
 app.listen(3000, () => console.log("Server running on port 3000"));
 
 
-import * as cheerio from 'cheerio'
-
 async function getProduct(formulations) {
     const result = [];
 
     try {
         for (const product of formulations) {
-           
-            let encoded = encodeURIComponent(product);
-            let url = `https://www.caretobeauty.com/za/catalogsearch/result/?q=${encoded}`;
-            let res = await fetch(url, {
-    method: "GET",
-    headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5'
-    }
-});
-            let html = await res.text();
-
-            let loadHtml = cheerio.load(html);
-
-            loadHtml('script').each((i, el) => {
-                let script_content = loadHtml(el).html();
-                if (script_content && script_content.includes('window.category_data')) {
-                    let match = script_content.match(/window\.category_data\s*=\s*(\{[\s\S]*?\});/);
-                    //console.log(match);
-                   // console.log(result);
-                    if (match && match[1]) {
-                       try {
-                            // Try parsing the raw string first without breaking escaped quotes
-                            const parsedData = JSON.parse(match[1]);
-                            result.push(parsedData);
-                        } catch (parseError) {
-                            console.error(` JSON Parse failed for ${product}. Trying fallback cleanup...`);
-                            
-                            try {
-                                // Fallback: Clean up trailing commas or backslashes if absolutely necessary
-                                let cleanedJson = match[1]
-                                    .replace(/\\"/g, '"') // fix escaped quotes properly instead of dropping all slashes
-                                    .replace(/,(\s*[\]}])/g, '$1'); // remove trailing commas
-                                
-                                result.push(JSON.parse(cleanedJson));
-                            } catch (fallbackError) {
-                                console.error(`❌ Fallback also failed:`, fallbackError.message);
-                            }
-                        }
-                    }else{
-                       
-                console.log(`Warning: 'window.category_data' not found for product: ${match}`);
-            
-                    }
-                }
-            });
-
-           
+            const encoded = encodeURIComponent(product);
+            const url = `https://makeup-api.herokuapp.com/api/v1/products.json?product_name=${encoded}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.length > 0) {
+                result.push({ search: product, items: data });
+            }
         }
-console.log("Scraping completed successfully!");
-//console.log("Hlulani",result);
+        console.log("Makeup API fetch completed successfully!");
         return { success: true, result };
-
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -185,36 +139,25 @@ console.log("Scraping completed successfully!");
 
 
 
-async function  getImages(formulations){
-    try{
-    const products=await getProduct(formulations);
-    const product=products.result || [];
-    
-   const result=[];
-   for(let p of product){
-    let arr=p.collection?.products;
-    console.log(arr);
-    for(let a of arr){
-        if(result.length==12){
-            break;
-        }
-       if (a.image) {
-                    let img=a.image.replace(/\\/g, '');
-                    if(!result.includes(img)){
-                    result.push(img);
-       }
+async function getImages(formulations) {
+    try {
+        const products = await getProduct(formulations);
+        const data = products.result || [];
+
+        const result = [];
+        for (const group of data) {
+            for (const item of (group.items || [])) {
+                if (result.length >= 12) break;
+                if (item.image_link && !result.includes(item.image_link)) {
+                    result.push(item.image_link);
                 }
-
+            }
+        }
+        console.log("Backend Successfully Compiled Images:", result);
+        return { success: true, result };
+    } catch (error) {
+        return { success: false, error: error.message };
     }
-   }
-   console.log("Backend Successfully Compiled Images:", result);
-    return {success:true,result:result};
-    }catch(error){
-  return {success:false,error:error.message};
-    }
-
-    
-
 }
 
 app.post("/getProducts",async(req,res)=>{
