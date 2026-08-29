@@ -1,0 +1,31 @@
+services:
+  # ── Backend: Express API ──
+  - type: web
+    name: derma-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: derma_backend
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: G_KEY
+        sync: false          # you'll set this manually in the Render dashboard
+      - key: NODE_ENV
+        value: production
+
+  # ── Frontend: Vite + React (static site) ──
+  - type: web
+    name: derma-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    buildCommand: npm install; npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false          # set this to the derma-backend URL after first deploy
