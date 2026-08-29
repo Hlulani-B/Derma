@@ -6,7 +6,7 @@ export async function getProduct(formulations){
     //['salicylic acid', 'retinoids']
    try {
 
-    const result = await fetch(`https://api-treupobaqq-uc.a.run.app/getProducts`, {
+    const result = await fetch(`${import.meta.env.VITE_API_URL}/getProducts`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ formulations:formulations })

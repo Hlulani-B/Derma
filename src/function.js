@@ -7,7 +7,7 @@ export async function derma(image) {
         reader.readAsDataURL(blob);
     });
 
-    const result = await fetch(`https://api-treupobaqq-uc.a.run.app/derma`, {
+    const result = await fetch(`${import.meta.env.VITE_API_URL}/derma`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64 })
