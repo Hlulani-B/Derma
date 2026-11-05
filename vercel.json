@@ -4,11 +4,11 @@
   "rewrites": [
     {
       "source": "/derma",
-      "destination": "https://us-central1-sd-2026-29de1.cloudfunctions.net/api/derma"
+      "destination": "https://derma-backend-0fmz.onrender.com/derma"
     },
     {
       "source": "/getProducts",
-      "destination": "https://us-central1-sd-2026-29de1.cloudfunctions.net/api/getProducts"
+      "destination": "https://derma-backend-0fmz.onrender.com/getProducts"
     },
     {
       "source": "/(.*)",
