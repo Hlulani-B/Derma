@@ -116,22 +116,52 @@ app.listen(3000, () => console.log("Server running on port 3000"));
 
 import * as cheerio from 'cheerio'
 
-// Extract product images from HTML
+// Extract product images from HTML using multiple strategies
 function extractProductImages(html) {
     const $ = cheerio.load(html);
     const images = [];
     
-    // Look for product image elements
-    $('img').each((i, el) => {
-        const src = $(el).attr('src') || $(el).attr('data-src');
-        if (src && !src.includes('data:image') && !src.includes('placeholder')) {
-            // Clean up the URL
-            const cleanSrc = src.replace(/\\/g, '');
-            if (!images.includes(cleanSrc)) {
+    // Strategy 1: Look for product cards with images
+    $('.product-item img, .product-card img, .product-image img, [class*="product"] img').each((i, el) => {
+        const src = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-original');
+        if (src && !src.includes('data:image') && !src.includes('placeholder') && !src.includes('logo') && !src.includes('icon')) {
+            const cleanSrc = src.replace(/\\/g, '').split('?')[0]; // Remove query params
+            if (cleanSrc.startsWith('http') && !images.includes(cleanSrc)) {
                 images.push(cleanSrc);
             }
         }
     });
+    
+    // Strategy 2: Look for any large images (likely product images)
+    if (images.length === 0) {
+        $('img').each((i, el) => {
+            const src = $(el).attr('src') || $(el).attr('data-src');
+            const width = $(el).attr('width');
+            const height = $(el).attr('height');
+            
+            // Filter for likely product images (skip small icons)
+            if (src && !src.includes('data:image') && !src.includes('placeholder') && 
+                !src.includes('logo') && !src.includes('icon') &&
+                (!width || width > 100) && (!height || height > 100)) {
+                const cleanSrc = src.replace(/\\/g, '').split('?')[0];
+                if (cleanSrc.startsWith('http') && !images.includes(cleanSrc)) {
+                    images.push(cleanSrc);
+                }
+            }
+        });
+    }
+    
+    // Strategy 3: Look for image URLs in the HTML source
+    if (images.length === 0) {
+        const urlMatches = html.match(/https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)(?:\?[^\s"'<>]*)?/gi) || [];
+        for (const url of urlMatches) {
+            const cleanUrl = url.split('?')[0];
+            if (!cleanUrl.includes('logo') && !cleanUrl.includes('icon') && !images.includes(cleanUrl)) {
+                images.push(cleanUrl);
+            }
+            if (images.length >= 12) break;
+        }
+    }
     
     return images.slice(0, 12); // Limit to 12 images
 }
@@ -140,26 +170,61 @@ async function getProduct(formulations) {
     const result = [];
 
     try {
-        for (const product of formulations) {
-            const encoded = encodeURIComponent(product);
-            const url = `https://www.caretobeauty.com/za/catalogsearch/result/?q=${encoded}`;
-            const res = await fetch(url, {
-                method: "GET",
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5'
+        // Map common skincare terms to actual product searches
+        const searchTerms = {
+            'general skincare routine': ['moisturizer', 'cleanser', 'sunscreen'],
+            'skincare': ['moisturizer', 'serum'],
+            'routine': ['cleanser', 'moisturizer'],
+            'moisturizer': ['moisturizer', 'cream'],
+            'cleanser': ['cleanser', 'face wash'],
+            'sunscreen': ['sunscreen', 'SPF'],
+            'serum': ['serum', 'vitamin c'],
+            'retinoids': ['retinol', 'retinoid'],
+            'salicylic acid': ['salicylic acid', 'BHA'],
+            'dark spots': ['dark spot corrector', 'vitamin c serum'],
+            'oiliness': ['oil control', 'matte moisturizer'],
+            'uneven texture': ['exfoliant', 'AHA'],
+        };
+
+        for (const formulation of formulations) {
+            const searchKey = formulation.toLowerCase();
+            const searchProducts = searchTerms[searchKey] || [formulation];
+            
+            for (const searchTerm of searchProducts) {
+                const encoded = encodeURIComponent(searchTerm);
+                const url = `https://www.caretobeauty.com/za/catalogsearch/result/?q=${encoded}`;
+                
+                try {
+                    const res = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.5'
+                        }
+                    });
+                    
+                    if (!res.ok) {
+                        console.log(`HTTP ${res.status} for: ${searchTerm}`);
+                        continue;
+                    }
+                    
+                    const html = await res.text();
+                    const images = extractProductImages(html);
+                    
+                    if (images && images.length > 0) {
+                        result.push({ product: searchTerm, images });
+                        console.log(`✅ Found ${images.length} images for: ${searchTerm}`);
+                        break; // Found images, no need to try other search terms
+                    } else {
+                        console.log(`⚠️ No images found for: ${searchTerm}`);
+                    }
+                } catch (fetchError) {
+                    console.log(`❌ Error fetching ${searchTerm}:`, fetchError.message);
                 }
-            });
-            const html = await res.text();
-            const images = extractProductImages(html);
-            if (images && images.length > 0) {
-                result.push({ product, images });
-                console.log(`Found ${images.length} images for: ${product}`);
-            } else {
-                console.log(`Warning: no images found for: ${product}`);
             }
         }
+        
         console.log("Scraping completed successfully!");
         return { success: true, result };
     } catch (error) {
