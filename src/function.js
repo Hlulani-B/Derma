@@ -8,7 +8,7 @@ export async function derma(image) {
     });
 
     try {
-        const result = await fetch(`${import.meta.env.VITE_API_URL}/derma`, {
+        const result = await fetch(`/derma`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ image: base64 })

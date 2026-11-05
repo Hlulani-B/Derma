@@ -5,7 +5,7 @@ export async function getProduct(formulations){
     console.log("🚀 getProduct function started! Formulations passed:", formulations);
     //['salicylic acid', 'retinoids']
    try {
-        const result = await fetch(`${import.meta.env.VITE_API_URL}/getProducts`, {
+        const result = await fetch(`/getProducts`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ formulations:formulations })

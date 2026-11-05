@@ -1,0 +1,18 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/derma",
+      "destination": "https://us-central1-sd-2026-29de1.cloudfunctions.net/api/derma"
+    },
+    {
+      "source": "/getProducts",
+      "destination": "https://us-central1-sd-2026-29de1.cloudfunctions.net/api/getProducts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
