@@ -5,22 +5,23 @@ export async function getProduct(formulations){
     console.log("🚀 getProduct function started! Formulations passed:", formulations);
     //['salicylic acid', 'retinoids']
    try {
-
-    const result = await fetch(`${import.meta.env.VITE_API_URL}/getProducts`, {
+        const result = await fetch(`${import.meta.env.VITE_API_URL}/getProducts`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ formulations:formulations })
         });
 
+        if (!result.ok) {
+            throw new Error(`HTTP error! status: ${result.status}`);
+        }
 
-    const data = await result.json(); 
+        const data = await result.json(); 
         console.log("The one and only", data);
-        return data.result;
-
+        return data.result || [];
 
    } catch (error) {
-    console.log(error);
+        console.error("Error in getProduct:", error);
+        return [];
    }
-   
-
+}
 }

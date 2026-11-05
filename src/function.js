@@ -7,12 +7,22 @@ export async function derma(image) {
         reader.readAsDataURL(blob);
     });
 
-    const result = await fetch(`${import.meta.env.VITE_API_URL}/derma`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64 })
-    });
-const data = await result.json();
-console.log("result is", data);
-return data;
+    try {
+        const result = await fetch(`${import.meta.env.VITE_API_URL}/derma`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64 })
+        });
+
+        if (!result.ok) {
+            throw new Error(`HTTP error! status: ${result.status}`);
+        }
+
+        const data = await result.json();
+        console.log("result is", data);
+        return data;
+    } catch (error) {
+        console.error("Error in derma function:", error);
+        return { success: false, result: [], message: "Failed to analyze image. Please try again." };
+    }
 }
