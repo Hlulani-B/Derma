@@ -116,27 +116,24 @@ app.listen(3000, () => console.log("Server running on port 3000"));
 
 import * as cheerio from 'cheerio'
 
-// Extract JSON from "window.category_data = {...}" by counting brace depth
-function extractCategoryData(html) {
-    const start = html.indexOf('window.category_data');
-    if (start === -1) return null;
-    const jsonStart = html.indexOf('{', start);
-    if (jsonStart === -1) return null;
-    let depth = 0;
-    for (let i = jsonStart; i < html.length; i++) {
-        if (html[i] === '{') depth++;
-        if (html[i] === '}') {
-            depth--;
-            if (depth === 0) {
-                try {
-                    return JSON.parse(html.substring(jsonStart, i + 1));
-                } catch (e) {
-                    return null;
-                }
+// Extract product images from HTML
+function extractProductImages(html) {
+    const $ = cheerio.load(html);
+    const images = [];
+    
+    // Look for product image elements
+    $('img').each((i, el) => {
+        const src = $(el).attr('src') || $(el).attr('data-src');
+        if (src && !src.includes('data:image') && !src.includes('placeholder')) {
+            // Clean up the URL
+            const cleanSrc = src.replace(/\\/g, '');
+            if (!images.includes(cleanSrc)) {
+                images.push(cleanSrc);
             }
         }
-    }
-    return null;
+    });
+    
+    return images.slice(0, 12); // Limit to 12 images
 }
 
 async function getProduct(formulations) {
@@ -155,11 +152,12 @@ async function getProduct(formulations) {
                 }
             });
             const html = await res.text();
-            const data = extractCategoryData(html);
-            if (data) {
-                result.push(data);
+            const images = extractProductImages(html);
+            if (images && images.length > 0) {
+                result.push({ product, images });
+                console.log(`Found ${images.length} images for: ${product}`);
             } else {
-                console.log(`Warning: could not extract category_data for: ${product}`);
+                console.log(`Warning: no images found for: ${product}`);
             }
         }
         console.log("Scraping completed successfully!");
@@ -181,14 +179,11 @@ async function getImages(formulations) {
 
         const result = [];
         for (const p of data) {
-            const items = p.collection?.products || [];
-            for (const item of items) {
+            const images = p.images || [];
+            for (const img of images) {
                 if (result.length >= 12) break;
-                if (item.image) {
-                    const img = item.image.replace(/\\/g, '');
-                    if (!result.includes(img)) {
-                        result.push(img);
-                    }
+                if (!result.includes(img)) {
+                    result.push(img);
                 }
             }
         }
